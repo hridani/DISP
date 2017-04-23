@@ -139,7 +139,7 @@ void main (void)
     kboard=CreateTask(&"Key  ",Timed,15,Slow,Time,4000,SlowKey); // програма клавиатура  
     if(ReadParamMem(1034,'u',&Time)==FALSE)
 	Time=8;
-    inpi=CreateTask(&"Input",Timed,16,Slow,Time,3024,SlowReadInput); // програма клавиатура  
+    inpi=CreateTask(&"Input",Timed,16,Slow,Time,3024,SlowReadInput); // програма  входове 
     if(ReadParamMem(1035,'u',&Time)==FALSE)
 	Time=60;
     screen=CreateTask(&"Print",Timed,14,Slow ,Time,4024,SlowPrint); // обява екран 
