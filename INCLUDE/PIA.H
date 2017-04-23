@@ -117,7 +117,8 @@ class MatrixLpt:public BasePia
    byte *potable; /* указател към таблицата с данни за матричните изходи */
    byte *pvtable; /* указател към таблицата с данни за свободните портове */
    MatrixLpt(unsigned,unsigned);/* конструктор */     
-   void TMatrix();/* описание на матрицата */
+   void TMatrix();/* описание на матрицата */  
+   void TMatrixVersion2017();/* описание на матрицата */
     virtual int kind() {return 3;}
     virtual void read();  /* четене на входове */
     virtual void write(void); /* писане в изходи */
