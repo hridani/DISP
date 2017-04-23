@@ -1218,13 +1218,103 @@ MatrixLpt::MatrixLpt(unsigned ba1,unsigned ba2)
 	      *(pbtable+3 +4*j)=1;/* маска */        //korekciq na 3.07.2013 - за платката в софия -обърната логика
 	   }
 }
+/****************************************************************/
+/* Base и Base+2 винаги са изходи,а на адрес Base+1 винаги са входове    */
+/*Т.к. на първа платка адреса е винаги х378 , Base+2 битове 0,1 и 2 да са твърдо изходи за матрицата.   */
+/*На адрес  Base+1 битове 3,4,5 и 7 да са входове на матрицата (стават общо 12)  */
+/*На  адрес  Base+1 бит 6 е вход ,който винаги е Авария ( 1 )   */
+/*На  адрес  Base+2 бит 3 е специален изход ,който в други системи генерира 10kHz и разрешава останалите изходи хардуерно.Ние не го ползваме.
+На втора платка имаме 13 изхода и 5 входа така получаваме 18 входа((12+1)+5) и 20 изхода (8+(8+5))    */
+        
+void MatrixLpt::TMatrixVersion2017()
+ {    
+    byte nmi=1;/* брой входни портове участвуващи в матрицата */
+    byte nmo=1;/* брой изходни портове участвуващи в матрицата */
+    byte nvi=1;/* брой входни портове със свободни входове , 1- порт B, lpt2,  */         
+    /* 2-ри - порт B,lpt1 -6 краче ...ще се чете чрез матричните входове*/
+    
+    unsigned *ptable; /* помощен указател към таблиците с данни */
+    unsigned *pvt; /* указател към блока с данни за свободните входове */
+    byte *pbtable;/* помощен указател към таблиците с данни */
+    int vinp=0;
+    int vout=0;
+//    extern byte numboutput[8];// номера на изходи ,участвуващи в матрица
+    
+     /* търсене на броя на портовете ,участвуващи в матрицата */     
+     
+        for(int  i=0; i<minput*moutput;i++)    // 3*4 (кор. 04.2017) =12   , но ще са 3*5=15, защото свободното краче е 6 , а 7 е в матрица
+           input.add();//добавяне в списъка на входовете                
+           
+     	for(int j=3;j<8;j++) //добавяне на свободните входове към списъка   12+5=17 
+     			input.add(baseadres2+1, j);  
+	    // input.add(baseadres1+1, 6);   //base1+1, bit 6, "авария"       17+1=18 
+	 //изходи
 
+		//  портА,лпт1-свободни от 0-7 
+		   for( i=0;i<8;i++)
+    			output.add(baseadres1,i);		//свободни изходи 8				
+    	//порт A,lpt2
+    	  for( i=0;i<8;i++)
+    			output.add(baseadres2,i); //свободни изходи 8+8=16
+  		//порт C1lpt2
+		  for( i=0;i<4;i++)
+    	 			output.add(baseadres2+2,i);	   	//свободни изходи 16+4=20		
+    			                                                      
+         //порт C1, лпт1,lpt2   = за матрица
+	//	  for( i=0;i<4;i++)
+    //	 			output.add(baseadres1+2,i);	
+ 
+     /* инициализация на изходите */
+     /* заделяне на памет за блокове с данни */
+	if(fNewMemory((void **)&pitable,( nmi*4)+1,&"TMinput") ==FALSE) /* за матрични входове */
+	 printf("No memory");
+     else
+       *(pitable +nmi *4)=0xa5;     /* край на блока */
+	
+	if(fNewMemory((void **)&pvtable,( nvi*4)+1,&"TVinput") ==FALSE) /* за свободни входове */
+	 printf("No memory");
+     else
+       *(pvtable +nvi *4)=0xa5;     /* край на блока */
+       
+	if(fNewMemory((void **)&potable,( moutput*4)+1,&"TMoutput") ==FALSE) /* матрични изходи */
+	 printf("No memory");
+     else
+       *(potable +moutput *4)=0xa5;     /* край на блока */
+    
+       /* инициализация на блоковете с данни */
+      ptable=(unsigned *)pitable; /* указател към блока с данни за матричните входове */
+      pvt=(unsigned *)pvtable;
+      j=0;
+      int k=0;     
+           *(ptable+2*j)=baseadres1+1; /* адрес на порта -вход */
+	       *(pitable+2+4*j)=5; /* брой крачета в матрицата от този порт */
+	       *(pitable+3+4*j)=1; /* посока на вземане на крачетата */ 
+	       
+	        *(pvt+2*k)=baseadres2+1; /* адрес на порта със свободни входове */
+	        *(pvtable+2+4*k)=5; /* брой на свободните входове за порт B */
+	        *(pvtable+3+4*k)=1;/* посока на вземане на крачетата за порт Б */
+     
+
+	/* матрични изходи */   
+	ptable=(unsigned *)potable;  /* указател към блока с данни за матричните изходи*/
+	pbtable=potable;/* указател към блока с данни за матричните изходи*/
+      //крачета -битове на матрични изходи -
+	  //идеята  е че се вземат последователно битове от 0 до 2(3) от портC,LPT1
+	   for( j=0;j<3;j++)
+	    { 
+	      *(ptable +2*j)=baseadres1+2;/* адрес на крачето-изход */
+	      *(pbtable+2 +4*j)=j;/* пореден номер на бит */
+	      *(pbtable+3 +4*j)=1;/* маска */        //korekciq na 3.07.2013 - за платката в софия -обърната логика
+	   }
+}        
+         
+         
 void MatrixLpt::read(void)
   {  
-     byte *pto=potable;
-     byte *pti=pitable;
-     byte *pi=pinput;
-     byte *pbi=pvtable;
+     byte *pto=potable; /* указател към стойностите на матрчини изходите в паметта */
+     byte *pti=pitable; /* указател към таблицата с данни за матричните портове */
+     byte *pi=pinput;  ;/* указател към стойностите на входовете в паметта */
+     byte *pbi=pvtable;   /* указател към таблицата с данни за свободните портове */
      unsigned off=0;
      extern unsigned l_value;
    __asm
@@ -1363,21 +1453,29 @@ MatrixLpt::~MatrixLpt()
      unsigned ba=baseadres; /* адрес на PIA */
      byte *vadres=poutput;/* адрес в паметта за запис на байтове от свободните изходи */
 //    byte voutput=22; /* брой на свободните изходи в матрицата за киро*/          
-   byte voutput=21; /* брой на свободните изходи в матрицата за автомивка софия*/    
+  // byte voutput=21; /* брой на свободните изходи в матрицата за автомивка софия*/    
+    byte voutput=20; /* брой на свободните изходи04.2017*/    
      byte value=0; /* задание на съответния порт */     
      
       
       //   value=ByteConvert(vadres,6,0);    //      за киро -има свободни 6 изхода от портА, LPT1
-       value=ByteConvert(vadres,5,0);        //  за автомивка  -има свободни 5 изхода от портА, LPT1
+      // value=ByteConvert(vadres,5,0);        //  за автомивка  -има свободни 5 изхода от портА, LPT1 
+        value=ByteConvert(vadres,8,0);        // има свободни 8 изхода от портА, LPT1     ,04.2017
       //   vadres=vadres + 6;    // за киро
-          vadres=vadres + 5;//за софия
-         _outp(baseadres1,value);
-          value=ByteConvert(vadres,4,1);  
-          vadres=vadres +4;   
-         _outp(baseadres1+2,value);     
+        // vadres=vadres + 5;//за софия  
+           vadres=vadres + 8;//04.2017
+         _outp(baseadres1,value);      
+         //порт C ,lpt1 
+         //04.2017 - няма свободни входове
+    //      value=ByteConvert(vadres,4,1);  
+    //      vadres=vadres +4;   
+   //      _outp(baseadres1+2,value);     
+         
+            //порт А, lpt2
          value=ByteConvert(vadres,8,0);   
          vadres=vadres +8;   
-         _outp(baseadres2,value);  
+         _outp(baseadres2,value); 
+         //port C, lpt2 
           value=ByteConvert(vadres,4,1);      
           vadres=vadres +4;   
          _outp(baseadres2+2,value);   

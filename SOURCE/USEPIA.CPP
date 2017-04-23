@@ -507,5 +507,6 @@ void   DiscrMatrixLpt(unsigned adres)
   if(!*listpia.cur )
     return ;
   if((*listpia.cur)->kind()==3)
-    ( (MatrixLpt*)(*listpia.cur))->TMatrix();   
+   // ( (MatrixLpt*)(*listpia.cur))->TMatrix();          
+     ( (MatrixLpt*)(*listpia.cur))->TMatrixVersion2017();//04.2017
 }
