@@ -159,7 +159,7 @@ void DrawTestScreen(void)
 {                             
   int Page=0;                             
   char buffer[10];
-  int k=1,numb=0;
+  unsigned k=1,numb=0;
   dprint(Page,35 ,0,0x70,&"T E S T"); 
     for(unsigned i=1; i<=input.nm;i++)
     {                          
